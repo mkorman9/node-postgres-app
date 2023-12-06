@@ -15,7 +15,7 @@ module.exports = async function() {
     })
     .withBindMounts([
       {
-        source: join(__dirname, 'migrations'),
+        source: join(__dirname, '..', 'migrations'),
         target: '/docker-entrypoint-initdb.d',
         mode: 'ro'
       }

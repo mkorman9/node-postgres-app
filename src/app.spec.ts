@@ -11,17 +11,23 @@ describe('app', () => {
   });
 
   it('should save and return record', async () => {
+    const content = 'Test Item';
+
     const postResponse = await chai.request(app)
       .post('/')
       .set('Content-Type', 'application/json')
       .send({
-        content: 'Test Item'
+        content
       });
     expect(postResponse.statusCode).toEqual(200);
+
+    const insertedId = postResponse.body;
 
     const getResponse = await chai.request(app)
       .get('/');
     expect(getResponse.statusCode).toEqual(200);
     expect(getResponse.body.length).toEqual(1);
+    expect(getResponse.body[0].id).toEqual(insertedId);
+    expect(getResponse.body[0].content).toEqual(content);
   });
 });

@@ -3,10 +3,10 @@ import './hooks';
 
 import {startServer} from './http/server';
 import app from './app';
-import pool from './db/pool';
+import knex from './db/knex';
 
 async function shutdown() {
-  await pool.end();
+  await knex.destroy();
 }
 
 startServer(app, config.HTTP_HOST, config.HTTP_PORT)

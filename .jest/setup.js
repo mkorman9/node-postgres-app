@@ -23,11 +23,9 @@ module.exports = async function() {
     .withWaitStrategy(Wait.forLogMessage(/.*database system is ready to accept connections.*/, 2))
     .start();
 
-  process.env.DB_HOST = postgresContainer.getHost();
-  process.env.DB_PORT = postgresContainer.getMappedPort(5432);
-  process.env.DB_NAME = dbName;
-  process.env.DB_USER = dbUser;
-  process.env.DB_PASSWORD = dbPassword;
+  const host = postgresContainer.getHost();
+  const port = postgresContainer.getMappedPort(5432);
+  process.env.DB_URL = `postgresql://${dbUser}:${dbPassword}@${host}:${port}/${dbName}`
 
   global.postgresContainer = postgresContainer;
 };

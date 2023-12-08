@@ -9,11 +9,7 @@ const ConfigSchema = z.object({
   HTTP_HOST: str().default('0.0.0.0'),
   HTTP_PORT: int().default(8080),
 
-  DB_HOST: str(),
-  DB_PORT: int(),
-  DB_NAME: str(),
-  DB_USER: str(),
-  DB_PASSWORD: str()
+  DB_URL: str()
 });
 
 export default (() => {

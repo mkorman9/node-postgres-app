@@ -1,8 +1,13 @@
 import {uuidv7} from 'uuidv7';
 import knex from './db/knex';
 
+export type TodoItem = {
+  id: string;
+  content: string;
+};
+
 export async function getTodoItems() {
-  return knex('todo_items')
+  return knex<TodoItem>('todo_items')
     .select(['id', 'content']);
 }
 

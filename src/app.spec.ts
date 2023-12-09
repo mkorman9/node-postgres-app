@@ -11,7 +11,7 @@ describe('app', () => {
   });
 
   it('should save and return record in list', async () => {
-    const content = 'Test Item';
+    const content = 'Test Item #1';
     const insertedId = await insertRecord(content);
 
     const getResponse = await chai.request(app)
@@ -31,6 +31,33 @@ describe('app', () => {
     expect(response.statusCode).toEqual(200);
     expect(response.body.id).toEqual(insertedId);
     expect(response.body.content).toEqual(content);
+  });
+
+  it('should save and update single record', async () => {
+    const content = 'Test Item #3';
+    const contentUpdated = 'Test Item #3 Updated';
+
+    const insertedId = await insertRecord(content);
+    const updateStatusCode = await updateRecord(insertedId, contentUpdated);
+    expect(updateStatusCode).toEqual(200);
+
+    const response = await chai.request(app)
+      .get(`/${insertedId}`);
+    expect(response.statusCode).toEqual(200);
+    expect(response.body.id).toEqual(insertedId);
+    expect(response.body.content).toEqual(contentUpdated);
+  });
+
+  it('should save and delete single record', async () => {
+    const content = 'Test Item #4';
+
+    const insertedId = await insertRecord(content);
+    const deleteStatusCode = await deleteRecord(insertedId);
+    expect(deleteStatusCode).toEqual(200);
+
+    const response = await chai.request(app)
+      .get(`/${insertedId}`);
+    expect(response.statusCode).toEqual(404);
   });
 
   it('should return 400 when inserting empty record', async () => {
@@ -64,5 +91,21 @@ describe('app', () => {
       });
     expect(response.statusCode).toEqual(200);
     return response.body;
+  }
+
+  async function updateRecord(id: string, content: string): Promise<number> {
+    const response = await chai.request(app)
+      .put(`/${id}`)
+      .set('Content-Type', 'application/json')
+      .send({
+        content
+      });
+    return response.statusCode;
+  }
+
+  async function deleteRecord(id: string): Promise<number> {
+    const response = await chai.request(app)
+      .delete(`/${id}`);
+    return response.statusCode;
   }
 });

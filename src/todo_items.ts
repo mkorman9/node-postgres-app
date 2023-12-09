@@ -7,7 +7,7 @@ export type TodoItem = {
   content: string;
 };
 
-export async function getTodoItems(): Promise<TodoItem[]> {
+export async function findAllTodoItems(): Promise<TodoItem[]> {
   return knex<TodoItem>('todo_items')
     .select(['id', 'content']);
 }
@@ -23,14 +23,36 @@ export async function findTodoItem(id: string): Promise<TodoItem | undefined> {
     .first();
 }
 
-export async function addTodoItem(content: string) {
+export async function addTodoItem(content: string): Promise<string> {
   const id = uuidv7();
   await knex('todo_items')
     .insert({ id, content });
   return id;
 }
 
-export async function deleteAllTodoItems() {
+export async function updateTodoItem(id: string, content: string): Promise<boolean> {
+  if (!z.string().uuid().safeParse(id).success) {
+    return false;
+  }
+
+  const affectedRows = await knex<TodoItem>('todo_items')
+    .where('id', id)
+    .update({ content });
+  return affectedRows > 0;
+}
+
+export async function deleteTodoItem(id: string): Promise<boolean> {
+  if (!z.string().uuid().safeParse(id).success) {
+    return false;
+  }
+
+  const affectedRows = await knex<TodoItem>('todo_items')
+    .where('id', id)
+    .delete();
+  return affectedRows > 0;
+}
+
+export async function deleteAllTodoItems(): Promise<void> {
   await knex('todo_items')
     .delete();
 }

@@ -12,7 +12,7 @@ const TodoItemPayload = z.object({
 
 app.get('/', async (req: Request, res: Response) => {
   const items = await findAllTodoItems();
-  return res.status(200).json(items);
+  return res.json(items);
 });
 
 app.get('/:id', async (req: Request, res: Response) => {
@@ -21,7 +21,7 @@ app.get('/:id', async (req: Request, res: Response) => {
     return res.status(404).json('Item not found');
   }
 
-  return res.status(200).json(item);
+  return res.json(item);
 });
 
 app.post(
@@ -30,7 +30,7 @@ app.post(
   async (req: Request, res: Response) => {
     const payload = getRequestBody(req, TodoItemPayload);
     const id = await addTodoItem(payload.content);
-    return res.status(200).json(id);
+    return res.json(id);
   }
 );
 
@@ -44,7 +44,7 @@ app.put(
       return res.status(404).json('Item not found');
     }
 
-    return res.status(200).json('ok');
+    return res.json('ok');
   }
 );
 
@@ -56,7 +56,7 @@ app.delete(
       return res.status(404).json('Item not found');
     }
 
-    return res.status(200).json('ok');
+    return res.json('ok');
   }
 );
 

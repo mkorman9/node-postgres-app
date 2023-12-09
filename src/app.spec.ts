@@ -60,7 +60,13 @@ describe('app', () => {
     expect(response.statusCode).toEqual(404);
   });
 
-  it('should return 400 when inserting empty record', async () => {
+  it('should return 404 when getting non-existing record', async () => {
+    const response = await chai.request(app)
+      .get('/invalid-id');
+    expect(response.statusCode).toEqual(404);
+  });
+
+  it('should return 400 when inserting record with empty content', async () => {
     const response = await chai.request(app)
       .post('/')
       .set('Content-Type', 'application/json')
@@ -70,16 +76,20 @@ describe('app', () => {
     expect(response.statusCode).toEqual(400);
   });
 
-  it('should return 404 for missing record', async () => {
-    const response = await chai.request(app)
-      .get('/018c4ab5-e7c7-74a5-9a4d-f26782ea6db9');
-    expect(response.statusCode).toEqual(404);
+  it('should return 400 when updating record with empty content', async () => {
+    const insertedId = await insertRecord('Content');
+    const deleteStatusCode = await updateRecord(insertedId, '');
+    expect(deleteStatusCode).toEqual(400);
   });
 
-  it('should return 404 for record with invalid id', async () => {
-    const response = await chai.request(app)
-      .get('/invalid-id');
-    expect(response.statusCode).toEqual(404);
+  it('should return 404 when updating non-existing record', async () => {
+    const updateStatusCode = await updateRecord('invalid-id', 'Content');
+    expect(updateStatusCode).toEqual(404);
+  });
+
+  it('should return 404 when deleting non-existing record', async () => {
+    const deleteStatusCode = await deleteRecord('invalid-id');
+    expect(deleteStatusCode).toEqual(404);
   });
 
   async function insertRecord(content: string): Promise<string> {

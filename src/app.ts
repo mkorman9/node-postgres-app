@@ -1,7 +1,7 @@
-import {NextFunction, Request, Response} from 'express';
+import {Request, Response} from 'express';
 import z from 'zod';
 import {appendErrorHandlers, createApp} from './http/app_template';
-import {addTodoItem, findTodoItem, findAllTodoItems, updateTodoItem, deleteTodoItem} from './todo_items';
+import {addTodoItem, deleteTodoItem, findAllTodoItems, findTodoItem, updateTodoItem} from './todo_items';
 import {bindRequestBody, getRequestBody} from './http/request_binding';
 
 const app = createApp();
@@ -10,64 +10,53 @@ const TodoItemPayload = z.object({
   content: z.string().min(1)
 });
 
-app.get('/', (req: Request, res: Response, next: NextFunction) => {
-  findAllTodoItems()
-    .then(items => res.status(200).json(items))
-    .catch(e => next(e));
+app.get('/', async (req: Request, res: Response) => {
+  const items = await findAllTodoItems();
+  return res.status(200).json(items);
 });
 
-app.get('/:id', (req: Request, res: Response, next: NextFunction) => {
-  findTodoItem(req.params.id)
-    .then(item => {
-      if (!item) {
-        return res.status(404).json('Item not found');
-      }
+app.get('/:id', async (req: Request, res: Response) => {
+  const item = await findTodoItem(req.params.id);
+  if (!item) {
+    return res.status(404).json('Item not found');
+  }
 
-      res.status(200).json(item);
-    })
-    .catch(e => next(e));
+  return res.status(200).json(item);
 });
 
 app.post(
   '/',
   bindRequestBody(TodoItemPayload),
-  (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response) => {
     const payload = getRequestBody(req, TodoItemPayload);
-    addTodoItem(payload.content)
-      .then(id => res.status(200).json(id))
-      .catch(e => next(e));
+    const id = await addTodoItem(payload.content);
+    return res.status(200).json(id);
   }
 );
 
 app.put(
   '/:id',
   bindRequestBody(TodoItemPayload),
-  (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response) => {
     const payload = getRequestBody(req, TodoItemPayload);
-    updateTodoItem(req.params.id, payload.content)
-      .then(updated => {
-        if (!updated) {
-          return res.status(404).json('Item not found');
-        }
+    const updated = await updateTodoItem(req.params.id, payload.content);
+    if (!updated) {
+      return res.status(404).json('Item not found');
+    }
 
-        res.status(200).json('ok');
-      })
-      .catch(e => next(e));
+    return res.status(200).json('ok');
   }
 );
 
 app.delete(
   '/:id',
-  (req: Request, res: Response, next: NextFunction) => {
-    deleteTodoItem(req.params.id)
-      .then(deleted => {
-        if (!deleted) {
-          return res.status(404).json('Item not found');
-        }
+  async (req: Request, res: Response) => {
+    const deleted = await deleteTodoItem(req.params.id);
+    if (!deleted) {
+      return res.status(404).json('Item not found');
+    }
 
-        res.status(200).json('ok');
-      })
-      .catch(e => next(e));
+    return res.status(200).json('ok');
   }
 );
 

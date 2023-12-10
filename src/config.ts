@@ -10,8 +10,8 @@ const ConfigSchema = z.object({
   HTTP_PORT: int().default(8080),
 
   DB_URL: str(),
-  DB_POOL_MIN: int(),
-  DB_POOL_MAX: int()
+  DB_POOL_MIN: int().default(0),
+  DB_POOL_MAX: int().default(5)
 });
 
 export default (() => {

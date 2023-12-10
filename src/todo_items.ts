@@ -25,7 +25,7 @@ export async function findTodoItem(id: string): Promise<TodoItem | undefined> {
 
 export async function addTodoItem(content: string): Promise<string> {
   const id = uuidv7();
-  await knex('todo_items')
+  await knex<TodoItem>('todo_items')
     .insert({ id, content });
   return id;
 }
@@ -53,6 +53,6 @@ export async function deleteTodoItem(id: string): Promise<boolean> {
 }
 
 export async function deleteAllTodoItems(): Promise<void> {
-  await knex('todo_items')
+  await knex<TodoItem>('todo_items')
     .delete();
 }

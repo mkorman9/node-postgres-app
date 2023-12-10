@@ -1,8 +1,8 @@
 import {Request, Response} from 'express';
 import z from 'zod';
 import {appendErrorHandlers, createApp} from './http/app_template';
+import {validateRequestBody} from './http/validation';
 import {addTodoItem, deleteTodoItem, findAllTodoItems, findTodoItem, updateTodoItem} from './todo_items';
-import {bindRequestBody, getRequestBody} from './http/request_binding';
 
 const app = createApp();
 
@@ -26,9 +26,8 @@ app.get('/:id', async (req: Request, res: Response) => {
 
 app.post(
   '/',
-  bindRequestBody(TodoItemPayload),
   async (req: Request, res: Response) => {
-    const payload = getRequestBody(req, TodoItemPayload);
+    const payload = await validateRequestBody(req, TodoItemPayload);
     const id = await addTodoItem(payload.content);
     return res.json(id);
   }
@@ -36,9 +35,8 @@ app.post(
 
 app.put(
   '/:id',
-  bindRequestBody(TodoItemPayload),
   async (req: Request, res: Response) => {
-    const payload = getRequestBody(req, TodoItemPayload);
+    const payload = await validateRequestBody(req, TodoItemPayload);
     const updated = await updateTodoItem(req.params.id, payload.content);
     if (!updated) {
       return res.status(404).json('Item not found');

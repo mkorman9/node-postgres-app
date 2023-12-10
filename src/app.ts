@@ -24,38 +24,29 @@ app.get('/:id', async (req: Request, res: Response) => {
   return res.json(item);
 });
 
-app.post(
-  '/',
-  async (req: Request, res: Response) => {
-    const payload = await validateRequestBody(req, TodoItemPayload);
-    const id = await addTodoItem(payload.content);
-    return res.json(id);
+app.post('/', async (req: Request, res: Response) => {
+  const payload = await validateRequestBody(req, TodoItemPayload);
+  const id = await addTodoItem(payload.content);
+  return res.json(id);
+});
+
+app.put('/:id', async (req: Request, res: Response) => {
+  const payload = await validateRequestBody(req, TodoItemPayload);
+  const updated = await updateTodoItem(req.params.id, payload.content);
+  if (!updated) {
+    return res.status(404).json('Item not found');
   }
-);
 
-app.put(
-  '/:id',
-  async (req: Request, res: Response) => {
-    const payload = await validateRequestBody(req, TodoItemPayload);
-    const updated = await updateTodoItem(req.params.id, payload.content);
-    if (!updated) {
-      return res.status(404).json('Item not found');
-    }
+  return res.json('ok');
+});
 
-    return res.json('ok');
+app.delete('/:id', async (req: Request, res: Response) => {
+  const deleted = await deleteTodoItem(req.params.id);
+  if (!deleted) {
+    return res.status(404).json('Item not found');
   }
-);
 
-app.delete(
-  '/:id',
-  async (req: Request, res: Response) => {
-    const deleted = await deleteTodoItem(req.params.id);
-    if (!deleted) {
-      return res.status(404).json('Item not found');
-    }
-
-    return res.json('ok');
-  }
-);
+  return res.json('ok');
+});
 
 export default appendErrorHandlers(app);

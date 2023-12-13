@@ -56,7 +56,7 @@ describe('app', () => {
     expect(deleteStatusCode).toEqual(200);
 
     const response = await chai.request(app)
-      .get(`/${insertedId}`);
+      .get(`/api/items/${insertedId}`);
     expect(response.statusCode).toEqual(404);
   });
 

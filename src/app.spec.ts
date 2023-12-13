@@ -2,7 +2,6 @@ import chai from 'chai';
 import chaiHttp from 'chai-http';
 import app from './app';
 import {deleteAllTodoItems} from './todo_items';
-import exp from 'node:constants';
 
 chai.use(chaiHttp);
 

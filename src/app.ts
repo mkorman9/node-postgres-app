@@ -1,4 +1,4 @@
-import {Request, Response} from 'express';
+import express, {Request, Response} from 'express';
 import z from 'zod';
 import {appendErrorHandlers, createApp} from './http/app_template';
 import {validateRequestBody} from './http/validation';
@@ -9,6 +9,8 @@ const app = createApp();
 const TodoItemPayload = z.object({
   content: z.string().min(1)
 });
+
+app.use('/', express.static('./public'));
 
 app.get('/api/items', async (req: Request, res: Response) => {
   const items = await findAllTodoItems();

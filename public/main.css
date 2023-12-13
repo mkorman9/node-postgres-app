@@ -1,0 +1,8 @@
+body {
+    background-color: dimgrey;
+}
+
+main {
+    display: flex;
+    justify-content: center;
+}

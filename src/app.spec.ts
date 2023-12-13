@@ -15,7 +15,7 @@ describe('app', () => {
     const insertedId = await insertRecord(content);
 
     const getResponse = await chai.request(app)
-      .get('/');
+      .get('/api/items');
     expect(getResponse.statusCode).toEqual(200);
     expect(getResponse.body.length).toEqual(1);
     expect(getResponse.body[0].id).toEqual(insertedId);
@@ -27,7 +27,7 @@ describe('app', () => {
     const insertedId = await insertRecord(content);
 
     const response = await chai.request(app)
-      .get(`/${insertedId}`);
+      .get(`/api/items/${insertedId}`);
     expect(response.statusCode).toEqual(200);
     expect(response.body.id).toEqual(insertedId);
     expect(response.body.content).toEqual(content);
@@ -42,7 +42,7 @@ describe('app', () => {
     expect(updateStatusCode).toEqual(200);
 
     const response = await chai.request(app)
-      .get(`/${insertedId}`);
+      .get(`/api/items/${insertedId}`);
     expect(response.statusCode).toEqual(200);
     expect(response.body.id).toEqual(insertedId);
     expect(response.body.content).toEqual(contentUpdated);
@@ -62,13 +62,13 @@ describe('app', () => {
 
   it('should return 404 when getting non-existing record', async () => {
     const response = await chai.request(app)
-      .get('/invalid-id');
+      .get('/api/items/invalid-id');
     expect(response.statusCode).toEqual(404);
   });
 
   it('should return 400 when inserting record with empty content', async () => {
     const response = await chai.request(app)
-      .post('/')
+      .post('/api/items')
       .set('Content-Type', 'application/json')
       .send({
         content: ''
@@ -94,7 +94,7 @@ describe('app', () => {
 
   async function insertRecord(content: string): Promise<string> {
     const response = await chai.request(app)
-      .post('/')
+      .post('/api/items')
       .set('Content-Type', 'application/json')
       .send({
         content
@@ -105,7 +105,7 @@ describe('app', () => {
 
   async function updateRecord(id: string, content: string): Promise<number> {
     const response = await chai.request(app)
-      .put(`/${id}`)
+      .put(`/api/items/${id}`)
       .set('Content-Type', 'application/json')
       .send({
         content
@@ -115,7 +115,7 @@ describe('app', () => {
 
   async function deleteRecord(id: string): Promise<number> {
     const response = await chai.request(app)
-      .delete(`/${id}`);
+      .delete(`/api/items/${id}`);
     return response.statusCode;
   }
 });

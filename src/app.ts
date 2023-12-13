@@ -10,12 +10,12 @@ const TodoItemPayload = z.object({
   content: z.string().min(1)
 });
 
-app.get('/', async (req: Request, res: Response) => {
+app.get('/api/items', async (req: Request, res: Response) => {
   const items = await findAllTodoItems();
   return res.json(items);
 });
 
-app.get('/:id', async (req: Request, res: Response) => {
+app.get('/api/items/:id', async (req: Request, res: Response) => {
   const item = await findTodoItem(req.params.id);
   if (!item) {
     return res.status(404).json('Item not found');
@@ -24,13 +24,13 @@ app.get('/:id', async (req: Request, res: Response) => {
   return res.json(item);
 });
 
-app.post('/', async (req: Request, res: Response) => {
+app.post('/api/items', async (req: Request, res: Response) => {
   const payload = await validateRequestBody(req, TodoItemPayload);
   const id = await addTodoItem(payload.content);
   return res.json(id);
 });
 
-app.put('/:id', async (req: Request, res: Response) => {
+app.put('/api/items/:id', async (req: Request, res: Response) => {
   const payload = await validateRequestBody(req, TodoItemPayload);
   const updated = await updateTodoItem(req.params.id, payload.content);
   if (!updated) {
@@ -40,7 +40,7 @@ app.put('/:id', async (req: Request, res: Response) => {
   return res.json('ok');
 });
 
-app.delete('/:id', async (req: Request, res: Response) => {
+app.delete('/api/items/:id', async (req: Request, res: Response) => {
   const deleted = await deleteTodoItem(req.params.id);
   if (!deleted) {
     return res.status(404).json('Item not found');

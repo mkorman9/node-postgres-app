@@ -61,6 +61,7 @@ describe('app', () => {
 
     const getResponse = await getRecord(insertResponse.body.id);
     expect(getResponse.statusCode).toEqual(404);
+    expect(getResponse.body.type).toEqual('ItemNotFound');
   });
 
   it('should return 404 when getting non-existing record', async () => {

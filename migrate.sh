@@ -36,8 +36,7 @@ if [ -z "$DB_HOST" ] \
   || [ -z "$DB_PORT" ] \
   || [ -z "$DB_NAME" ] \
   || [ -z "$DB_USER" ] \
-  || [ -z "$DB_PASSWORD" ] \
-  || [ -z "$DB_SCHEMA" ]; then
+  || [ -z "$DB_PASSWORD" ]; then
   echo 'usage: ./migrate.sh --host <HOST> --port <PORT> --db <DB_NAME> --user <USER> --password <PASSWORD>'
   exit 1
 fi

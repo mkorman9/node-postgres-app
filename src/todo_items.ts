@@ -1,6 +1,7 @@
 import {uuidv7} from 'uuidv7';
 import knex from './db/knex';
 import z from 'zod';
+import {DatabaseError} from 'pg';
 
 export type TodoItem = {
   id: string;
@@ -17,26 +18,38 @@ export async function findTodoItemsPaged(pageSize: number, pageToken?: string): 
     .select(['id', 'content'])
     .limit(pageSize);
 
-  if (pageToken && z.string().uuid().safeParse(pageToken).success) {
+  if (pageToken) {
     query.where('id', '>', pageToken);
   }
 
-  const data = await query;
-  return {
-    data,
-    nextPageToken: data.length > 0 ? data[data.length - 1].id : undefined
-  };
+  try {
+    const data = await query;
+    return {
+      data,
+      nextPageToken: data.length > 0 ? data[data.length - 1].id : undefined
+    };
+  } catch (e) {
+    if (e instanceof DatabaseError && e.routine === 'string_to_uuid') {
+      return {data: []};
+    }
+
+    throw e;
+  }
 }
 
 export async function findTodoItem(id: string): Promise<TodoItem | undefined> {
-  if (!z.string().uuid().safeParse(id).success) {
-    return undefined;
-  }
+  try {
+    return await knex<TodoItem>('todo_items')
+      .select(['id', 'content'])
+      .where('id', id)
+      .first();
+  } catch (e) {
+    if (e instanceof DatabaseError && e.routine === 'string_to_uuid') {
+      return undefined;
+    }
 
-  return knex<TodoItem>('todo_items')
-    .select(['id', 'content'])
-    .where('id', id)
-    .first();
+    throw e;
+  }
 }
 
 export async function addTodoItem(content: string): Promise<string> {

@@ -1,7 +1,7 @@
 import {Request, Response, Router} from 'express';
 import z from 'zod';
-import {addTodoItem, deleteTodoItem, findAllTodoItems, findTodoItem, updateTodoItem} from './todo_items';
-import {validateRequestBody} from './http/validation';
+import {addTodoItem, deleteTodoItem, findTodoItemsPaged, findTodoItem, updateTodoItem} from './todo_items';
+import {validateRequestBody, validateRequestQuery} from './http/validation';
 
 const api = Router();
 
@@ -10,8 +10,13 @@ const TodoItemPayload = z.object({
 });
 
 api.get('/api/items', async (req: Request, res: Response) => {
-  const items = await findAllTodoItems();
-  return res.json(items);
+  const query = await validateRequestQuery(req, z.object({
+    pageSize: z.coerce.number().int().default(10),
+    pageToken: z.string().optional()
+  }));
+
+  const page = await findTodoItemsPaged(query.pageSize, query.pageToken);
+  return res.json(page);
 });
 
 api.get('/api/items/:id', async (req: Request, res: Response) => {

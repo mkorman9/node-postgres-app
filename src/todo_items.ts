@@ -7,9 +7,25 @@ export type TodoItem = {
   content: string;
 };
 
-export async function findAllTodoItems(): Promise<TodoItem[]> {
-  return knex<TodoItem>('todo_items')
-    .select(['id', 'content']);
+export type TodoItemsPage = {
+  data: TodoItem[];
+  nextPageToken?: string;
+};
+
+export async function findTodoItemsPaged(pageSize: number, pageToken?: string): Promise<TodoItemsPage> {
+  const query = knex<TodoItem>('todo_items')
+    .select(['id', 'content'])
+    .limit(pageSize);
+
+  if (pageToken && z.string().uuid().safeParse(pageToken).success) {
+    query.where('id', '>', pageToken);
+  }
+
+  const data = await query;
+  return {
+    data,
+    nextPageToken: data.length > 0 ? data[data.length - 1].id : undefined
+  };
 }
 
 export async function findTodoItem(id: string): Promise<TodoItem | undefined> {

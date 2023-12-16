@@ -16,15 +16,37 @@ describe('app', () => {
     const insertResponse = await insertRecord(content);
     expect(insertResponse.statusCode).toEqual(200);
 
-    const getResponse = await getAllRecords();
+    const getResponse = await getRecordsPage();
     expect(getResponse.statusCode).toEqual(200);
-    expect(getResponse.body.length).toEqual(1);
-    expect(getResponse.body[0].id).toEqual(insertResponse.body.id);
-    expect(getResponse.body[0].content).toEqual(content);
+    expect(getResponse.body.data.length).toEqual(1);
+    expect(getResponse.body.data[0].id).toEqual(insertResponse.body.id);
+    expect(getResponse.body.data[0].content).toEqual(content);
+  });
+
+  it('should save and return paged records', async () => {
+    const content1 = 'Test Item #1';
+    const content2 = 'Test Item #2';
+
+    const insertResponse1 = await insertRecord(content1);
+    expect(insertResponse1.statusCode).toEqual(200);
+    const insertResponse2 = await insertRecord(content2);
+    expect(insertResponse2.statusCode).toEqual(200);
+
+    const getResponse1 = await getRecordsPage(1);
+    expect(getResponse1.statusCode).toEqual(200);
+    expect(getResponse1.body.data.length).toEqual(1);
+    expect(getResponse1.body.data[0].id).toEqual(insertResponse1.body.id);
+    expect(getResponse1.body.data[0].content).toEqual(content1);
+
+    const getResponse2 = await getRecordsPage(1, getResponse1.body.nextPageToken);
+    expect(getResponse2.statusCode).toEqual(200);
+    expect(getResponse2.body.data.length).toEqual(1);
+    expect(getResponse2.body.data[0].id).toEqual(insertResponse2.body.id);
+    expect(getResponse2.body.data[0].content).toEqual(content2);
   });
 
   it('should save and return single record', async () => {
-    const content = 'Test Item #2';
+    const content = 'Test Item #1';
 
     const insertResponse = await insertRecord(content);
     expect(insertResponse.statusCode).toEqual(200);
@@ -36,8 +58,8 @@ describe('app', () => {
   });
 
   it('should save and update single record', async () => {
-    const content = 'Test Item #3';
-    const contentUpdated = 'Test Item #3 Updated';
+    const content = 'Test Item #1';
+    const contentUpdated = 'Test Item #1 Updated';
 
     const insertResponse = await insertRecord(content);
     expect(insertResponse.statusCode).toEqual(200);
@@ -51,7 +73,7 @@ describe('app', () => {
   });
 
   it('should save and delete single record', async () => {
-    const content = 'Test Item #4';
+    const content = 'Test Item #1';
 
     const insertResponse = await insertRecord(content);
     expect(insertResponse.statusCode).toEqual(200);
@@ -95,9 +117,13 @@ describe('app', () => {
     expect(response.body.type).toEqual('ItemNotFound');
   });
 
-  function getAllRecords() {
+  function getRecordsPage(pageSize?: number, pageToken?: string) {
     return chai.request(app)
-      .get('/api/items');
+      .get('/api/items')
+      .query({
+        pageSize,
+        pageToken
+      });
   }
 
   function getRecord(id: string) {

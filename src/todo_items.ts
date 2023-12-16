@@ -9,6 +9,7 @@ export type TodoItem = {
 
 export type TodoItemsPage = {
   data: TodoItem[];
+  pageSize: number;
   nextPageToken?: string;
 };
 
@@ -24,6 +25,7 @@ export async function findTodoItemsPaged(pageSize: number, pageToken?: string): 
   const data = await query;
   return {
     data,
+    pageSize,
     nextPageToken: data.length > 0 ? data[data.length - 1].id : undefined
   };
 }

@@ -11,7 +11,7 @@ const TodoItemPayload = z.object({
 
 api.get('/api/items', async (req: Request, res: Response) => {
   const query = await validateRequestQuery(req, z.object({
-    pageSize: z.coerce.number().int().default(10),
+    pageSize: z.coerce.number().int().min(1).max(100).default(10),
     pageToken: z.string().optional()
   }));
 

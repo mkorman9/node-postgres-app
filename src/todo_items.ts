@@ -1,6 +1,6 @@
 import {uuidv7} from 'uuidv7';
 import knex from './db/knex';
-import {DatabaseError} from 'pg';
+import {isInvalidUuidError} from './db/helpers';
 
 export type TodoItem = {
   id: string;
@@ -96,8 +96,4 @@ export async function deleteTodoItem(id: string): Promise<boolean> {
 export async function deleteAllTodoItems(): Promise<void> {
   await knex<TodoItem>('todo_items')
     .delete();
-}
-
-function isInvalidUuidError(e: unknown): boolean {
-  return e instanceof DatabaseError && e.routine === 'string_to_uuid';
 }

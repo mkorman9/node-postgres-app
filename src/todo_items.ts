@@ -13,7 +13,10 @@ export type TodoItemsPage = {
   nextPageToken?: string;
 };
 
-export async function findTodoItemsPaged(pageSize: number, pageToken?: string): Promise<TodoItemsPage> {
+export async function findTodoItemsPaged(
+  pageSize: number,
+  pageToken?: string
+): Promise<TodoItemsPage> {
   const query = knex<TodoItem>('todo_items')
     .select(['id', 'content'])
     .limit(pageSize);

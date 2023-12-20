@@ -1,6 +1,6 @@
 import {uuidv7} from 'uuidv7';
 import knex from './db/knex';
-import {isInvalidUuidError} from './db/helpers';
+import {z} from 'zod';
 
 export type TodoItem = {
   id: string;
@@ -21,42 +21,27 @@ export async function findTodoItemsPaged(
     .select(['id', 'content'])
     .limit(pageSize);
 
-  if (pageToken) {
+  if (pageToken && z.string().uuid().safeParse(pageToken).success) {
     query.where('id', '>', pageToken);
   }
 
-  try {
-    const data = await query;
-    return {
-      data,
-      pageSize,
-      nextPageToken: data.length > 0 ? data[data.length - 1].id : undefined
-    };
-  } catch (e) {
-    if (isInvalidUuidError(e)) {
-      return {
-        data: [],
-        pageSize
-      };
-    }
-    
-    throw e;
-  }
+  const data = await query;
+  return {
+    data,
+    pageSize,
+    nextPageToken: data.length > 0 ? data[data.length - 1].id : undefined
+  };
 }
 
 export async function findTodoItem(id: string): Promise<TodoItem | undefined> {
-  try {
-    return await knex<TodoItem>('todo_items')
-      .select(['id', 'content'])
-      .where('id', id)
-      .first();
-  } catch (e) {
-    if (isInvalidUuidError(e)) {
-      return undefined;
-    }
-
-    throw e;
+  if (!z.string().uuid().safeParse(id).success) {
+    return undefined;
   }
+
+  return knex<TodoItem>('todo_items')
+    .select(['id', 'content'])
+    .where('id', id)
+    .first();
 }
 
 export async function addTodoItem(content: string): Promise<string> {
@@ -67,33 +52,25 @@ export async function addTodoItem(content: string): Promise<string> {
 }
 
 export async function updateTodoItem(id: string, content: string): Promise<boolean> {
-  try {
-    const affectedRows = await knex<TodoItem>('todo_items')
-      .where('id', id)
-      .update({content});
-    return affectedRows > 0;
-  } catch (e) {
-    if (isInvalidUuidError(e)) {
-      return false;
-    }
-
-    throw e;
+  if (!z.string().uuid().safeParse(id).success) {
+    return false;
   }
+
+  const affectedRows = await knex<TodoItem>('todo_items')
+    .where('id', id)
+    .update({content});
+  return affectedRows > 0;
 }
 
 export async function deleteTodoItem(id: string): Promise<boolean> {
-  try {
-    const affectedRows = await knex<TodoItem>('todo_items')
-      .where('id', id)
-      .delete();
-    return affectedRows > 0;
-  } catch (e) {
-    if (isInvalidUuidError(e)) {
-      return false;
-    }
-
-    throw e;
+  if (!z.string().uuid().safeParse(id).success) {
+    return false;
   }
+
+  const affectedRows = await knex<TodoItem>('todo_items')
+    .where('id', id)
+    .delete();
+  return affectedRows > 0;
 }
 
 export async function deleteAllTodoItems(): Promise<void> {

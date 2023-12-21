@@ -2,7 +2,7 @@ import {Request} from 'express';
 import expressWs from 'express-ws';
 import ws from 'ws';
 
-export function mountWebsocketApi(app: expressWs.Application) {
+export function mountWebsocketAPI(app: expressWs.Application) {
   app.ws('/ws', async (ws: ws, req: Request) => {
     console.log('websocket connected');
 

@@ -1,6 +1,6 @@
 import {appendErrorHandlers, createApp} from './http/app_template';
-import todoItemsApi from './todo_items_api';
-import {mountWebsocketApi} from './websocket_api';
+import todoItemsAPI from './todo_items_api';
+import {mountWebsocketAPI} from './websocket_api';
 import {Request, Response} from 'express';
 
 const app = createApp();
@@ -13,7 +13,7 @@ app.get('/', async (req: Request, res: Response) => {
   });
 });
 
-app.use(todoItemsApi);
-mountWebsocketApi(app);
+app.use(todoItemsAPI);
+mountWebsocketAPI(app);
 
 export default appendErrorHandlers(app);

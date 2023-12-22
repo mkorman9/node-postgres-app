@@ -9,9 +9,7 @@ const ChatMessage = z.object({
   text: z.string()
 });
 
-const LeaveCommand = z.object({
-  reason: z.string()
-});
+const LeaveCommand = z.object({});
 
 export const Packets = {
   JOIN_COMMAND: JoinCommand,
@@ -37,4 +35,15 @@ export interface PacketHandler {
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class PacketHandler extends EventEmitter {
+  private disconnectHandler: (() => void | PromiseLike<void>) | undefined;
+
+  onDisconnect(handler: () => void | PromiseLike<void>) {
+    this.disconnectHandler = handler;
+  }
+
+  disconnect() {
+    if (this.disconnectHandler) {
+      this.disconnectHandler();
+    }
+  }
 }

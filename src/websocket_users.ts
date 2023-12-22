@@ -28,6 +28,10 @@ export function unregisterSocketUser(user: WebsocketUser) {
   users.delete(user.id);
 }
 
+export function listSocketUsers() {
+  return [...users.values()];
+}
+
 export function sendSocketMessage(user: WebsocketUser, type: string, data: unknown) {
   user.socket.send(JSON.stringify({
     type,
@@ -35,8 +39,8 @@ export function sendSocketMessage(user: WebsocketUser, type: string, data: unkno
   }));
 }
 
-export function broadcastSocketMessageToJoined(type: string, data: unknown) {
-  [...users.values()]
-    .filter(user => user.joined)
+export function broadcastSocketMessage(predicate: (user: WebsocketUser) => void, type: string, data: unknown) {
+  listSocketUsers()
+    .filter(predicate)
     .forEach(user => sendSocketMessage(user, type, data));
 }

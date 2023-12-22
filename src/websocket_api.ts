@@ -4,42 +4,74 @@ import ws from 'ws';
 import {ZodError} from 'zod';
 import {PacketHandler, Packets, PacketsDefinition} from './websocket_packets';
 import {
+  broadcastSocketMessage,
+  listSocketUsers,
   registerSocketUser,
-  WebsocketUser,
-  unregisterSocketUser,
-  broadcastSocketMessageToJoined
+  sendSocketMessage,
+  unregisterSocketUser
 } from './websocket_users';
 
-function createPacketHandler(user: WebsocketUser) {
+function createPacketHandler(socket: ws) {
+  const user = registerSocketUser(socket);
   const packetHandler = new PacketHandler();
+
+  packetHandler.onDisconnect(() => {
+    console.log(`${user.username} left`);
+
+    unregisterSocketUser(user);
+
+    broadcastSocketMessage(
+      () => true,
+      'USER_LEFT',
+      {
+        id: user.id,
+        username: user.username
+      }
+    );
+  });
 
   packetHandler.on('JOIN_COMMAND', command => {
     console.log(`${command.username} joined`);
     user.username = command.username;
+    user.joined = true;
 
-    broadcastSocketMessageToJoined('USER_JOINED', {
-      username: user.username
+    sendSocketMessage(user, 'JOIN_CONFIRMATION', {
+      id: user.id,
+      username: user.username,
+      users: listSocketUsers()
+        .filter(u => u.joined)
+        .map(u => ({
+          id: u.id,
+          username: u.username
+        }))
     });
 
-    user.joined = true;
+    broadcastSocketMessage(
+      u => u.joined && u.id !== user.id,
+      'USER_JOINED',
+      {
+        id: user.id,
+        username: user.username
+      }
+    );
   });
 
   packetHandler.on('CHAT_MESSAGE', message => {
     console.log(`[${user.username}] ${message.text}`);
 
-    broadcastSocketMessageToJoined('USER_MESSAGE', {
-      username: user.username,
-      text: message.text
-    });
+    broadcastSocketMessage(
+      u => u.joined,
+      'USER_MESSAGE',
+      {
+        id: user.id,
+        username: user.username,
+        text: message.text
+      }
+    );
   });
 
-  packetHandler.on('LEAVE_COMMAND', command => {
-    console.log(`${user.username} left: ${command.reason}`);
-    user.joined = false;
-
-    broadcastSocketMessageToJoined('USER_LEFT', {
-      username: user.username
-    });
+  packetHandler.on('LEAVE_COMMAND', () => {
+    user.socket.close();
   });
 
   return packetHandler;
@@ -47,8 +79,7 @@ function createPacketHandler(user: WebsocketUser) {
 
 export function mountWebsocketAPI(app: expressWs.Application) {
   app.ws('/ws', async (socket: ws, req: Request) => {
-    const user = registerSocketUser(socket);
-    const packetHandler = createPacketHandler(user);
+    const packetHandler = createPacketHandler(socket);
 
     socket.on('message', (data: ws.RawData) => {
       try {
@@ -68,7 +99,7 @@ export function mountWebsocketAPI(app: expressWs.Application) {
     });
 
     socket.on('close', () => {
-      unregisterSocketUser(user);
+      packetHandler.disconnect();
     });
   });
 }

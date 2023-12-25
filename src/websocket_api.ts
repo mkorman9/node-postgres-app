@@ -55,6 +55,7 @@ export default function websocketAPI(socket: ws, req: Request) {
   protocol.on('JOIN_REQUEST', request => {
     const session = startWebsocketSession(id, socket, request.username);
     if (!session) {
+      sendWebsocketMessage(socket, 'JOIN_REJECTION', {});
       return;
     }
 

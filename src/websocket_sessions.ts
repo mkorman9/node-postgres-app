@@ -28,6 +28,9 @@ export function startWebsocketSession(
   if (activeSessions.has(id)) {
     return undefined;
   }
+  if (websocketSessions().find(s => s.username === username)) {
+    return undefined;
+  }
 
   const user: WebsocketSession = {
     id,

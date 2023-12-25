@@ -1,0 +1,59 @@
+import ws from 'ws';
+import {uuidv4} from 'uuidv7';
+
+export type WebsocketSession = {
+  id: string;
+  socket: ws;
+};
+
+export type WebsocketUser = {
+  session: WebsocketSession;
+  username: string;
+};
+
+const sessions = new Map<string, WebsocketSession>();
+const users = new Map<string, WebsocketUser>();
+
+export function registerWebsocketSession(socket: ws): WebsocketSession {
+  const id = uuidv4();
+  const session: WebsocketSession = {
+    socket,
+    id
+  };
+
+  sessions.set(id, session);
+  return session;
+}
+
+export function unregisterWebsocketSession(session: WebsocketSession) {
+  users.delete(session.id);
+  sessions.delete(session.id);
+}
+
+export function assignWebsocketSessionUser(session: WebsocketSession, username: string): WebsocketUser | undefined {
+  if (users.has(session.id)) {
+    return undefined;
+  }
+
+  const user: WebsocketUser = {
+    session,
+    username
+  };
+  users.set(session.id, user);
+  return user;
+}
+
+export function listWebsocketUsers() {
+  return [...users.values()];
+}
+
+export function getWebsocketUser(session: WebsocketSession): WebsocketUser | undefined {
+  return users.get(session.id);
+}
+
+export function sendWebsocketMessage(session: WebsocketSession, type: string, data: unknown) {
+  session.socket.send(JSON.stringify({
+    type,
+    data
+  }));
+}

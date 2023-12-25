@@ -1,6 +1,6 @@
 import {appendErrorHandlers, createApp} from './http/app_template';
 import todoItemsAPI from './todo_items_api';
-import {mountWebsocketAPI} from './websocket_api';
+import websocketAPI from './websocket_api';
 import {Request, Response} from 'express';
 
 const app = createApp();
@@ -14,6 +14,6 @@ app.get('/', async (req: Request, res: Response) => {
 });
 
 app.use(todoItemsAPI);
-mountWebsocketAPI(app);
+app.ws('/ws', websocketAPI);
 
 export default appendErrorHandlers(app);

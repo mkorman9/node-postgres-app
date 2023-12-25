@@ -1,105 +1,93 @@
 import {Request} from 'express';
-import expressWs from 'express-ws';
 import ws from 'ws';
 import {ZodError} from 'zod';
-import {PacketHandler, Packets, PacketsDefinition} from './websocket_packets';
+import {Packets, PacketsType, WebsocketProtocol} from './websocket_protocol';
 import {
-  broadcastSocketMessage,
-  listSocketUsers,
-  registerSocketUser,
-  sendSocketMessage,
-  unregisterSocketUser
-} from './websocket_users';
+  assignWebsocketSessionUser,
+  getWebsocketUser,
+  listWebsocketUsers,
+  registerWebsocketSession,
+  sendWebsocketMessage,
+  unregisterWebsocketSession
+} from './websocket_session';
 
-function createPacketHandler(socket: ws) {
-  const user = registerSocketUser(socket);
-  const packetHandler = new PacketHandler();
+export default function websocketAPI(socket: ws, req: Request) {
+  const session = registerWebsocketSession(socket);
+  const protocol = new WebsocketProtocol();
 
-  packetHandler.onDisconnect(() => {
-    console.log(`${user.username} left`);
-
-    unregisterSocketUser(user);
-
-    broadcastSocketMessage(
-      () => true,
-      'USER_LEFT',
-      {
-        id: user.id,
-        username: user.username
+  socket.on('message', (data: ws.RawData) => {
+    try {
+      const packet = JSON.parse(data.toString());
+      if (Object.hasOwn(Packets, packet.type)) {
+        const payload = Packets[packet.type as keyof PacketsType].parse(packet.data);
+        protocol.emit(packet.type, payload);
       }
-    );
+    } catch (e) {
+      if (e instanceof SyntaxError || e instanceof ZodError) {
+        // ignore message
+        return;
+      }
+
+      throw e;
+    }
   });
 
-  packetHandler.on('JOIN_COMMAND', command => {
-    console.log(`${command.username} joined`);
-    user.username = command.username;
-    user.joined = true;
+  socket.on('close', () => {
+    const user = getWebsocketUser(session);
+    if (user) {
+      console.log(`${user.username} left`);
 
-    sendSocketMessage(user, 'JOIN_CONFIRMATION', {
-      id: user.id,
+      listWebsocketUsers()
+        .filter(u => u.session.id !== session.id)
+        .forEach(u => sendWebsocketMessage(u.session, 'USER_LEFT', {
+          id: session.id,
+          username: user.username
+        }));
+    }
+
+    unregisterWebsocketSession(session);
+  });
+
+  protocol.on('JOIN_REQUEST', request => {
+    const user = assignWebsocketSessionUser(session, request.username);
+    if (!user) {
+      return;
+    }
+
+    console.log(`${user.username} joined`);
+
+    sendWebsocketMessage(session, 'JOIN_CONFIRMATION', {
+      id: session.id,
       username: user.username,
-      users: listSocketUsers()
-        .filter(u => u.joined)
+      users: listWebsocketUsers()
         .map(u => ({
-          id: u.id,
           username: u.username
         }))
     });
 
-    broadcastSocketMessage(
-      u => u.joined && u.id !== user.id,
-      'USER_JOINED',
-      {
-        id: user.id,
+    listWebsocketUsers()
+      .filter(u => u.session.id !== session.id)
+      .forEach(u => sendWebsocketMessage(u.session, 'USER_JOINED', {
         username: user.username
-      }
-    );
+      }));
   });
 
-  packetHandler.on('CHAT_MESSAGE', message => {
+  protocol.on('CHAT_MESSAGE', message => {
+    const user = getWebsocketUser(session);
+    if (!user) {
+      return;
+    }
+
     console.log(`[${user.username}] ${message.text}`);
 
-    broadcastSocketMessage(
-      u => u.joined,
-      'USER_MESSAGE',
-      {
-        id: user.id,
+    listWebsocketUsers()
+      .forEach(u => sendWebsocketMessage(u.session, 'CHAT_MESSAGE', {
         username: user.username,
         text: message.text
-      }
-    );
+      }));
   });
 
-  packetHandler.on('LEAVE_COMMAND', () => {
-    user.socket.close();
-  });
-
-  return packetHandler;
-}
-
-export function mountWebsocketAPI(app: expressWs.Application) {
-  app.ws('/ws', async (socket: ws, req: Request) => {
-    const packetHandler = createPacketHandler(socket);
-
-    socket.on('message', (data: ws.RawData) => {
-      try {
-        const packet = JSON.parse(data.toString());
-        if (Object.hasOwn(Packets, packet.type)) {
-          const payload = Packets[packet.type as keyof PacketsDefinition].parse(packet.data);
-          packetHandler.emit(packet.type, payload);
-        }
-      } catch (e) {
-        if (e instanceof SyntaxError || e instanceof ZodError) {
-          // ignore message
-          return;
-        }
-
-        throw e;
-      }
-    });
-
-    socket.on('close', () => {
-      packetHandler.disconnect();
-    });
+  protocol.on('LEAVE_REQUEST', () => {
+    session.socket.close();
   });
 }

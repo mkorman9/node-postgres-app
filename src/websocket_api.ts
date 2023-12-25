@@ -32,10 +32,14 @@ export default function websocketAPI(socket: ws, req: Request) {
     }
   });
 
-  socket.on('close', () => {
+  socket.on('close', (code, reason) => {
     const session = websocketSession(id);
     if (session) {
-      console.log(`${session.username} left`);
+      if (reason.toString() === 'leaving') {
+        console.log(`${session.username} left`);
+      } else {
+        console.log(`${session.username} timed out`);
+      }
 
       websocketSessions()
         .filter(s => s.id !== id)
@@ -87,6 +91,6 @@ export default function websocketAPI(socket: ws, req: Request) {
   });
 
   protocol.on('LEAVE_REQUEST', () => {
-    socket.close();
+    socket.close(1000, 'leaving');
   });
 }

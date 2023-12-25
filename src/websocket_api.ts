@@ -23,13 +23,8 @@ export default function websocketAPI(socket: ws, req: Request) {
         protocol.emit(packet.type, payload);
       }
     } catch (e) {
-      if (e instanceof SyntaxError) {
+      if (e instanceof SyntaxError || e instanceof ZodError) {
         // ignore message
-        return;
-      } else if (e instanceof ZodError) {
-        sendWebsocketMessage(socket, 'PACKET_VALIDATION_ERROR', {
-          errors: e.errors
-        });
         return;
       }
 

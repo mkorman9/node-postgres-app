@@ -3,16 +3,16 @@ import ws from 'ws';
 import {ZodError} from 'zod';
 import {Packets, PacketsType, WebsocketProtocol} from './websocket_protocol';
 import {
-  joinWebsocketUser,
-  getWebsocketUser,
-  listWebsocketUsers,
-  createWebsocketSession,
-  sendWebsocketMessage,
-  closeWebsocketSession
-} from './websocket_session';
+  generateWebsocketId,
+  websocketSession,
+  startWebsocketSession,
+  websocketSessions,
+  stopWebsocketSession,
+  sendWebsocketMessage
+} from './websocket_sessions';
 
 export default function websocketAPI(socket: ws, req: Request) {
-  const session = createWebsocketSession(socket);
+  const id = generateWebsocketId();
   const protocol = new WebsocketProtocol();
 
   socket.on('message', (data: ws.RawData) => {
@@ -23,8 +23,13 @@ export default function websocketAPI(socket: ws, req: Request) {
         protocol.emit(packet.type, payload);
       }
     } catch (e) {
-      if (e instanceof SyntaxError || e instanceof ZodError) {
+      if (e instanceof SyntaxError) {
         // ignore message
+        return;
+      } else if (e instanceof ZodError) {
+        sendWebsocketMessage(socket, 'PACKET_VALIDATION_ERROR', {
+          errors: e.errors
+        });
         return;
       }
 
@@ -33,61 +38,59 @@ export default function websocketAPI(socket: ws, req: Request) {
   });
 
   socket.on('close', () => {
-    const user = getWebsocketUser(session);
-    if (user) {
-      console.log(`${user.username} left`);
+    const session = websocketSession(id);
+    if (session) {
+      console.log(`${session.username} left`);
 
-      listWebsocketUsers()
-        .filter(u => u.session.id !== session.id)
-        .forEach(u => sendWebsocketMessage(u.session, 'USER_LEFT', {
-          id: session.id,
-          username: user.username
+      websocketSessions()
+        .filter(s => s.id !== id)
+        .forEach(s => sendWebsocketMessage(s.socket, 'USER_LEFT', {
+          username: session.username
         }));
     }
 
-    closeWebsocketSession(session);
+    stopWebsocketSession(id);
   });
 
   protocol.on('JOIN_REQUEST', request => {
-    const user = joinWebsocketUser(session, request.username);
-    if (!user) {
+    const session = startWebsocketSession(id, socket, request.username);
+    if (!session) {
       return;
     }
 
-    console.log(`${user.username} joined`);
+    console.log(`${session.username} joined`);
 
-    sendWebsocketMessage(session, 'JOIN_CONFIRMATION', {
-      id: session.id,
-      username: user.username,
-      users: listWebsocketUsers()
-        .map(u => ({
-          username: u.username
+    sendWebsocketMessage(socket, 'JOIN_CONFIRMATION', {
+      username: session.username,
+      users: websocketSessions()
+        .map(s => ({
+          username: s.username
         }))
     });
 
-    listWebsocketUsers()
-      .filter(u => u.session.id !== session.id)
-      .forEach(u => sendWebsocketMessage(u.session, 'USER_JOINED', {
-        username: user.username
+    websocketSessions()
+      .filter(s => s.id !== id)
+      .forEach(s => sendWebsocketMessage(s.socket, 'USER_JOINED', {
+        username: session.username
       }));
   });
 
   protocol.on('CHAT_MESSAGE', message => {
-    const user = getWebsocketUser(session);
-    if (!user) {
+    const session = websocketSession(id);
+    if (!session) {
       return;
     }
 
-    console.log(`[${user.username}] ${message.text}`);
+    console.log(`[${session.username}] ${message.text}`);
 
-    listWebsocketUsers()
-      .forEach(u => sendWebsocketMessage(u.session, 'CHAT_MESSAGE', {
-        username: user.username,
+    websocketSessions()
+      .forEach(s => sendWebsocketMessage(s.socket, 'CHAT_MESSAGE', {
+        username: session.username,
         text: message.text
       }));
   });
 
   protocol.on('LEAVE_REQUEST', () => {
-    session.socket.close();
+    socket.close();
   });
 }

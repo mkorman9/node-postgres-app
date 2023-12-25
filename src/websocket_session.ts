@@ -14,23 +14,29 @@ export type WebsocketUser = {
 const sessions = new Map<string, WebsocketSession>();
 const users = new Map<string, WebsocketUser>();
 
-export function registerWebsocketSession(socket: ws): WebsocketSession {
-  const id = uuidv4();
-  const session: WebsocketSession = {
-    socket,
-    id
-  };
+export function createWebsocketSession(socket: ws): WebsocketSession {
+  let id = '';
+  do {
+    id = uuidv4();
+  } while (sessions.has(id));
 
+  const session = {
+    id,
+    socket
+  };
   sessions.set(id, session);
   return session;
 }
 
-export function unregisterWebsocketSession(session: WebsocketSession) {
-  users.delete(session.id);
+export function closeWebsocketSession(session: WebsocketSession) {
   sessions.delete(session.id);
+  users.delete(session.id);
 }
 
-export function assignWebsocketSessionUser(session: WebsocketSession, username: string): WebsocketUser | undefined {
+export function joinWebsocketUser(
+  session: WebsocketSession,
+  username: string
+): WebsocketUser | undefined {
   if (users.has(session.id)) {
     return undefined;
   }

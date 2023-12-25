@@ -3,16 +3,16 @@ import ws from 'ws';
 import {ZodError} from 'zod';
 import {Packets, PacketsType, WebsocketProtocol} from './websocket_protocol';
 import {
-  assignWebsocketSessionUser,
+  joinWebsocketUser,
   getWebsocketUser,
   listWebsocketUsers,
-  registerWebsocketSession,
+  createWebsocketSession,
   sendWebsocketMessage,
-  unregisterWebsocketSession
+  closeWebsocketSession
 } from './websocket_session';
 
 export default function websocketAPI(socket: ws, req: Request) {
-  const session = registerWebsocketSession(socket);
+  const session = createWebsocketSession(socket);
   const protocol = new WebsocketProtocol();
 
   socket.on('message', (data: ws.RawData) => {
@@ -45,11 +45,11 @@ export default function websocketAPI(socket: ws, req: Request) {
         }));
     }
 
-    unregisterWebsocketSession(session);
+    closeWebsocketSession(session);
   });
 
   protocol.on('JOIN_REQUEST', request => {
-    const user = assignWebsocketSessionUser(session, request.username);
+    const user = joinWebsocketUser(session, request.username);
     if (!user) {
       return;
     }

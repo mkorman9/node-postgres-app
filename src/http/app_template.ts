@@ -1,5 +1,4 @@
 import express, {Application, NextFunction, Request, Response} from 'express';
-import expressWs from 'express-ws';
 import 'express-async-errors';
 
 export class HTTPResponseError extends Error {
@@ -15,12 +14,11 @@ export class HTTPResponseError extends Error {
   }
 }
 
-export function createApp(): expressWs.Application {
-  const app = express()
+export function createApp(): Application {
+  return express()
     .set('trust proxy', ['loopback', 'linklocal', 'uniquelocal'])
     .disable('x-powered-by')
     .disable('etag');
-  return expressWs(app).app;
 }
 
 export function appendErrorHandlers(app: Application): Application {

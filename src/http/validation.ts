@@ -47,7 +47,7 @@ export async function validateRequestBody<TSchema extends z.Schema>(
   }
 
   try {
-    req.body = await new Promise<unknown>((resolve, reject) =>
+    await new Promise<unknown>((resolve, reject) =>
       parser(req, {} as ServerResponse, (err?: Error) => {
         if (err) {
           return reject(err);

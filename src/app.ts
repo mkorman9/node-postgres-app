@@ -1,10 +1,12 @@
+import {Request, Response} from 'express';
 import {appendErrorHandlers, createApp} from './http/app_template';
 import todoItemsAPI from './todo_items_api';
-import {Request, Response} from 'express';
+import config from './config';
 
-const app = createApp();
-
-//app.use('/', express.static('./public'));
+const app = createApp({
+  corsOrigin: config.HTTP_CORS_ORIGIN,
+  trustProxies: config.HTTP_TRUST_PROXIES
+});
 
 app.get('/', async (req: Request, res: Response) => {
   res.json({

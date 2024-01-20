@@ -38,7 +38,7 @@ export async function findTodoItem(id: string): Promise<TodoItem | undefined> {
 
   return knex<TodoItem>('todo_items')
     .select(['id', 'content'])
-    .where('id', id)
+    .where('id', '=', id)
     .first();
 }
 
@@ -55,7 +55,7 @@ export async function updateTodoItem(id: string, content: string): Promise<boole
   }
 
   const affectedRows = await knex<TodoItem>('todo_items')
-    .where('id', id)
+    .where('id', '=', id)
     .update({content});
   return affectedRows > 0;
 }
@@ -66,7 +66,7 @@ export async function deleteTodoItem(id: string): Promise<boolean> {
   }
 
   const affectedRows = await knex<TodoItem>('todo_items')
-    .where('id', id)
+    .where('id', '=', id)
     .delete();
   return affectedRows > 0;
 }

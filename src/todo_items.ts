@@ -1,6 +1,6 @@
 import {uuidv7} from 'uuidv7';
 import knex from './db/knex';
-import {z} from 'zod';
+import {isUUID} from './util';
 
 export type TodoItem = {
   id: string;
@@ -19,7 +19,7 @@ export async function findTodoItemsPaged(pageSize: number, pageToken?: string): 
     .orderBy('id')
     .limit(pageSize);
 
-  if (pageToken && z.string().uuid().safeParse(pageToken).success) {
+  if (pageToken && isUUID(pageToken)) {
     query.where('id', '>', pageToken);
   }
 
@@ -32,7 +32,7 @@ export async function findTodoItemsPaged(pageSize: number, pageToken?: string): 
 }
 
 export async function findTodoItem(id: string): Promise<TodoItem | undefined> {
-  if (!z.string().uuid().safeParse(id).success) {
+  if (!isUUID(id)) {
     return undefined;
   }
 
@@ -50,7 +50,7 @@ export async function addTodoItem(content: string): Promise<string> {
 }
 
 export async function updateTodoItem(id: string, content: string): Promise<boolean> {
-  if (!z.string().uuid().safeParse(id).success) {
+  if (!isUUID(id)) {
     return false;
   }
 
@@ -61,7 +61,7 @@ export async function updateTodoItem(id: string, content: string): Promise<boole
 }
 
 export async function deleteTodoItem(id: string): Promise<boolean> {
-  if (!z.string().uuid().safeParse(id).success) {
+  if (!isUUID(id)) {
     return false;
   }
 

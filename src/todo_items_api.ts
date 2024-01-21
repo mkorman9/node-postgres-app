@@ -1,13 +1,9 @@
 import {Request, Response, Router} from 'express';
 import z from 'zod';
-import {addTodoItem, deleteTodoItem, findTodoItemsPaged, findTodoItem, updateTodoItem} from './todo_items';
+import {addTodoItem, deleteTodoItem, findTodoItem, findTodoItemsPaged, updateTodoItem} from './todo_items';
 import {validateRequestBody, validateRequestQuery} from './http/validation';
 
 const api = Router();
-
-const TodoItemPayload = z.object({
-  content: z.string().min(1)
-});
 
 api.get('/api/items', async (req: Request, res: Response) => {
   const query = await validateRequestQuery(req, z.object({
@@ -36,7 +32,9 @@ api.get('/api/items/:id', async (req: Request, res: Response) => {
 });
 
 api.post('/api/items', async (req: Request, res: Response) => {
-  const payload = await validateRequestBody(req, TodoItemPayload);
+  const payload = await validateRequestBody(req, z.object({
+    content: z.string().min(1)
+  }));
   const id = await addTodoItem(payload.content);
   return res.json({
     id
@@ -44,7 +42,9 @@ api.post('/api/items', async (req: Request, res: Response) => {
 });
 
 api.put('/api/items/:id', async (req: Request, res: Response) => {
-  const payload = await validateRequestBody(req, TodoItemPayload);
+  const payload = await validateRequestBody(req, z.object({
+    content: z.string().min(1)
+  }));
   const updated = await updateTodoItem(req.params.id, payload.content);
   if (!updated) {
     return res.status(404).json({

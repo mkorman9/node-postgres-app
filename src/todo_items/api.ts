@@ -1,7 +1,7 @@
 import {Request, Response, Router} from 'express';
 import z from 'zod';
-import {addTodoItem, deleteTodoItem, findTodoItem, findTodoItemsPaged, updateTodoItem} from './todo_items';
-import {validateRequestBody, validateRequestQuery} from './http/validation';
+import {addTodoItem, deleteTodoItem, findTodoItem, findTodoItemsPaged, updateTodoItem} from './model';
+import {validateRequestBody, validateRequestQuery} from '../http/validation';
 
 const api = Router();
 

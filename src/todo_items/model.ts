@@ -1,6 +1,6 @@
 import {uuidv7} from 'uuidv7';
-import knex from './db/knex';
-import {isUUID} from './util';
+import knex from '../db/knex';
+import {isUUID} from '../util';
 
 export type TodoItem = {
   id: string;

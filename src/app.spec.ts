@@ -1,7 +1,7 @@
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import app from './app';
-import {deleteAllTodoItems} from './todo_items';
+import {deleteAllTodoItems} from './todo_items/model';
 
 chai.use(chaiHttp);
 

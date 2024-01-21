@@ -1,6 +1,6 @@
 import {Request, Response} from 'express';
 import {appendErrorHandlers, createApp} from './http/app_template';
-import todoItemsAPI from './todo_items_api';
+import todoItemsAPI from './todo_items/api';
 import config from './config';
 
 const app = createApp({

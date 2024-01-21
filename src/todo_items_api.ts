@@ -35,7 +35,7 @@ api.post('/api/items', async (req: Request, res: Response) => {
   const payload = await validateRequestBody(req, z.object({
     content: z.string().min(1)
   }));
-  const id = await addTodoItem(payload.content);
+  const id = await addTodoItem(payload);
   return res.json({
     id
   });
@@ -45,7 +45,7 @@ api.put('/api/items/:id', async (req: Request, res: Response) => {
   const payload = await validateRequestBody(req, z.object({
     content: z.string().min(1)
   }));
-  const updated = await updateTodoItem(req.params.id, payload.content);
+  const updated = await updateTodoItem(req.params.id, payload);
   if (!updated) {
     return res.status(404).json({
       title: 'Item with given ID was not found',

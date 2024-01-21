@@ -42,21 +42,26 @@ export async function findTodoItem(id: string): Promise<TodoItem | undefined> {
     .first();
 }
 
-export async function addTodoItem(content: string): Promise<string> {
+export async function addTodoItem(payload: {content: string}): Promise<string> {
   const id = uuidv7();
   await knex<TodoItem>('todo_items')
-    .insert({ id, content });
+    .insert({
+      id,
+      content: payload.content
+    });
   return id;
 }
 
-export async function updateTodoItem(id: string, content: string): Promise<boolean> {
+export async function updateTodoItem(id: string, payload: {content: string}): Promise<boolean> {
   if (!isUUID(id)) {
     return false;
   }
 
   const affectedRows = await knex<TodoItem>('todo_items')
     .where('id', '=', id)
-    .update({content});
+    .update({
+      content: payload.content
+    });
   return affectedRows > 0;
 }
 

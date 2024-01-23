@@ -1,5 +1,5 @@
 import {Request, Response} from 'express';
-import {appendErrorHandlers, createApp} from './http/app_template';
+import {createApp, attachDefaultHandlers} from './http/app_template';
 import todoItemsAPI from './todo_items/api';
 import config from './config';
 
@@ -16,4 +16,4 @@ app.get('/', async (req: Request, res: Response) => {
 
 app.use(todoItemsAPI);
 
-export default appendErrorHandlers(app);
+export default attachDefaultHandlers(app);

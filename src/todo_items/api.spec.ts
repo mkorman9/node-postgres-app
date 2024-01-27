@@ -85,7 +85,13 @@ describe('Todo Items API', () => {
     expect(getResponse.body.type).toEqual('ItemNotFound');
   });
 
-  it('should return 404 when getting record with invalid', async () => {
+  it('should return 404 when getting non-existing record', async () => {
+    const response = await getRecord('561d5ad8-62b6-4b17-a2a0-39711bccc08d');
+    expect(response.statusCode).toEqual(404);
+    expect(response.body.type).toEqual('ItemNotFound');
+  });
+
+  it('should return 400 when getting record with invalid id', async () => {
     const response = await getRecord('invalid-id');
     expect(response.statusCode).toEqual(400);
     expect(response.body.type).toEqual('ValidationError');
@@ -105,13 +111,25 @@ describe('Todo Items API', () => {
     expect(deleteResponse.body.type).toEqual('ValidationError');
   });
 
-  it('should return 404 when updating record with invalid id', async () => {
+  it('should return 404 when updating non-existing record', async () => {
+    const response = await updateRecord('561d5ad8-62b6-4b17-a2a0-39711bccc08d', 'Content');
+    expect(response.statusCode).toEqual(404);
+    expect(response.body.type).toEqual('ItemNotFound');
+  });
+
+  it('should return 400 when updating record with invalid id', async () => {
     const response = await updateRecord('invalid-id', 'Content');
     expect(response.statusCode).toEqual(400);
     expect(response.body.type).toEqual('ValidationError');
   });
 
-  it('should return 404 when deleting record with invalid id', async () => {
+  it('should return 404 when deleting non-existing record', async () => {
+    const response = await deleteRecord('561d5ad8-62b6-4b17-a2a0-39711bccc08d');
+    expect(response.statusCode).toEqual(404);
+    expect(response.body.type).toEqual('ItemNotFound');
+  });
+
+  it('should return 400 when deleting record with invalid id', async () => {
     const response = await deleteRecord('invalid-id');
     expect(response.statusCode).toEqual(400);
     expect(response.body.type).toEqual('ValidationError');

@@ -1,6 +1,5 @@
 import {uuidv7} from 'uuidv7';
 import knex from '../db/knex';
-import {isUUID} from '../util';
 
 export type TodoItem = {
   id: string;
@@ -19,7 +18,7 @@ export async function findTodoItemsPaged(pageSize: number, pageToken?: string): 
     .orderBy('id')
     .limit(pageSize);
 
-  if (pageToken && isUUID(pageToken)) {
+  if (pageToken) {
     query.where('id', '>', pageToken);
   }
 
@@ -32,10 +31,6 @@ export async function findTodoItemsPaged(pageSize: number, pageToken?: string): 
 }
 
 export async function findTodoItem(id: string): Promise<TodoItem | undefined> {
-  if (!isUUID(id)) {
-    return undefined;
-  }
-
   return knex<TodoItem>('todo_items')
     .select(['id', 'content'])
     .where('id', '=', id)
@@ -53,10 +48,6 @@ export async function addTodoItem(payload: {content: string}): Promise<string> {
 }
 
 export async function updateTodoItem(id: string, payload: {content: string}): Promise<boolean> {
-  if (!isUUID(id)) {
-    return false;
-  }
-
   const affectedRows = await knex<TodoItem>('todo_items')
     .where('id', '=', id)
     .update({
@@ -66,10 +57,6 @@ export async function updateTodoItem(id: string, payload: {content: string}): Pr
 }
 
 export async function deleteTodoItem(id: string): Promise<boolean> {
-  if (!isUUID(id)) {
-    return false;
-  }
-
   const affectedRows = await knex<TodoItem>('todo_items')
     .where('id', '=', id)
     .delete();

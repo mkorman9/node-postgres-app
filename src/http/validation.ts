@@ -1,79 +1,49 @@
-import express, {Request} from 'express';
-import z, {ZodError} from 'zod';
-import {ServerResponse} from 'http';
-import {HTTPResponseError} from './http_error';
+import express, {RequestHandler} from 'express';
+import z from 'zod';
 
-export const BodyParserTypes = {
-  json: {
-    contentType: 'application/json',
-    parser: express.json()
-  },
-  form: {
-    contentType: 'application/x-www-form-urlencoded',
-    parser: express.urlencoded({extended: true})
-  },
-  text: {
-    contentType: '',
-    parser: express.text({type: '*/*'})
-  },
-  raw: {
-    contentType: '',
-    parser: express.raw({type: '*/*'})
-  }
-};
+const jsonMiddleware = express.json();
 
-export type BodyParserType = keyof typeof BodyParserTypes;
+export function validateBody<TSchema extends z.Schema>(
+  schema: TSchema
+): RequestHandler<unknown, unknown, z.TypeOf<TSchema>, unknown> {
+  return (req, res, next) => {
+    jsonMiddleware(req, res, (err?: Error) => {
+      if (err) {
+        return res.status(400).json({
+          title: 'Provided request body cannot be parsed',
+          type: 'MalformedRequestBody',
+          cause: process.env.NODE_ENV === 'production' ? undefined : (err.stack)
+        });
+      }
 
-export type ValidateRequestBodyOptions = {
-  parsers?: BodyParserType[]
-};
+      const result = schema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          title: 'Provided request body contains schema violations',
+          type: 'ValidationError',
+          cause: result.error.issues.map(issue => ({
+            location: issue.path,
+            code: issue.message.toLowerCase() === 'required' ? 'required' : issue.code,
+            message: issue.message
+          }))
+        });
+      }
 
-export async function validateRequestBody<TSchema extends z.Schema>(
-  req: Request,
-  schema: TSchema,
-  opts?: ValidateRequestBodyOptions
-): Promise<z.TypeOf<TSchema>> {
-  const parser = (opts?.parsers || ['json'])
-    .map(types => BodyParserTypes[types])
-    .filter(types => (req.header('Content-Type') || '').startsWith(types.contentType))
-    .map(type => type.parser)
-    .shift();
-
-  if (!parser) {
-    throw new HTTPResponseError(415, {
-      title: 'Provided request body format was not recognised',
-      type: 'UnsupportedMediaType'
+      next();
     });
-  }
+  };
+}
 
-  try {
-    await new Promise<void>((resolve, reject) =>
-      parser(req, {} as ServerResponse, (err?: Error) => {
-        if (err) {
-          return reject(err);
-        }
-
-        resolve();
-      })
-    );
-  } catch (e) {
-    throw new HTTPResponseError(400, {
-      title: 'Provided request body cannot be parsed',
-      type: 'MalformedRequestBody',
-      cause: process.env.NODE_ENV === 'production'
-        ? undefined
-        : (e instanceof Error ? e.stack : e)
-    });
-  }
-
-  try {
-    return await schema.parseAsync(req.body);
-  } catch (e) {
-    if (e instanceof ZodError) {
-      throw new HTTPResponseError(400, {
-        title: 'Provided request body contains schema violations',
+export function validateParams<TSchema extends z.Schema>(
+  schema: TSchema
+): RequestHandler<z.TypeOf<TSchema>, unknown, unknown, unknown> {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.params);
+    if (!result.success) {
+      return res.status(400).json({
+        title: 'Provided request path parameters contain schema violations',
         type: 'ValidationError',
-        cause: e.issues.map(issue => ({
+        cause: result.error.issues.map(issue => ({
           location: issue.path,
           code: issue.message.toLowerCase() === 'required' ? 'required' : issue.code,
           message: issue.message
@@ -81,41 +51,21 @@ export async function validateRequestBody<TSchema extends z.Schema>(
       });
     }
 
-    throw e;
-  }
+    req.params = result.data;
+    next();
+  };
 }
 
-export function getRequestBodyText(req: Request): Promise<string> {
-  return validateRequestBody(
-    req,
-    z.preprocess(v => (v && typeof v === 'object' && !Object.keys(v).length) ? '' : v, z.string()),
-    {parsers: ['text']}
-  );
-}
-
-export function getRequestBodyRaw(req: Request): Promise<Buffer> {
-  return validateRequestBody(
-    req,
-    z.preprocess(
-      v => (v && typeof v === 'object' && !Object.keys(v).length) ? Buffer.from('') : v,
-      z.instanceof(Buffer)
-    ),
-    {parsers: ['raw']}
-  );
-}
-
-export async function validateRequestQuery<TSchema extends z.Schema>(
-  req: Request,
+export function validateQuery<TSchema extends z.Schema>(
   schema: TSchema
-): Promise<z.TypeOf<TSchema>> {
-  try {
-    return await schema.parseAsync(req.query);
-  } catch (e) {
-    if (e instanceof ZodError) {
-      throw new HTTPResponseError(400, {
+): RequestHandler<unknown, unknown, unknown, z.TypeOf<TSchema>> {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.query);
+    if (!result.success) {
+      return res.status(400).json({
         title: 'Provided request query parameters contain schema violations',
         type: 'ValidationError',
-        cause: e.issues.map(issue => ({
+        cause: result.error.issues.map(issue => ({
           location: issue.path,
           code: issue.message.toLowerCase() === 'required' ? 'required' : issue.code,
           message: issue.message
@@ -123,6 +73,7 @@ export async function validateRequestQuery<TSchema extends z.Schema>(
       });
     }
 
-    throw e;
-  }
+    req.query = result.data;
+    next();
+  };
 }

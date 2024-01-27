@@ -85,10 +85,10 @@ describe('Todo Items API', () => {
     expect(getResponse.body.type).toEqual('ItemNotFound');
   });
 
-  it('should return 404 when getting non-existing record', async () => {
+  it('should return 404 when getting record with invalid', async () => {
     const response = await getRecord('invalid-id');
-    expect(response.statusCode).toEqual(404);
-    expect(response.body.type).toEqual('ItemNotFound');
+    expect(response.statusCode).toEqual(400);
+    expect(response.body.type).toEqual('ValidationError');
   });
 
   it('should return 400 when inserting record with empty content', async () => {
@@ -105,16 +105,16 @@ describe('Todo Items API', () => {
     expect(deleteResponse.body.type).toEqual('ValidationError');
   });
 
-  it('should return 404 when updating non-existing record', async () => {
+  it('should return 404 when updating record with invalid id', async () => {
     const response = await updateRecord('invalid-id', 'Content');
-    expect(response.statusCode).toEqual(404);
-    expect(response.body.type).toEqual('ItemNotFound');
+    expect(response.statusCode).toEqual(400);
+    expect(response.body.type).toEqual('ValidationError');
   });
 
-  it('should return 404 when deleting non-existing record', async () => {
+  it('should return 404 when deleting record with invalid id', async () => {
     const response = await deleteRecord('invalid-id');
-    expect(response.statusCode).toEqual(404);
-    expect(response.body.type).toEqual('ItemNotFound');
+    expect(response.statusCode).toEqual(400);
+    expect(response.body.type).toEqual('ValidationError');
   });
 
   function getRecordsPage(pageSize?: number, pageToken?: string) {

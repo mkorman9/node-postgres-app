@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "eslint --ext .ts src/",
     "test": "jest --detectOpenHandles --forceExit",
-    "build": "tsc --build",
+    "build": "tsc",
     "start": "tsc-watch --noClear --onSuccess \"node --enable-source-maps .\""
   },
   "dependencies": {

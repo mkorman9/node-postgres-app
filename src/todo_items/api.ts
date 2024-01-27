@@ -7,14 +7,14 @@ const api = Router();
 
 api.get(
   '/api/items',
-  validateQuery(z.object({
+  validateQuery({
     pageSize: z.coerce.number()
       .int()
       .min(1)
       .max(100)
       .default(10),
     pageToken: z.string().optional()
-  })),
+  }),
   async (req, res) => {
     const page = await findTodoItemsPaged(req.query.pageSize, req.query.pageToken);
     return res.json(page);
@@ -23,9 +23,9 @@ api.get(
 
 api.get(
   '/api/items/:id',
-  validateParams(z.object({
+  validateParams({
     id: z.string().uuid()
-  })),
+  }),
   async (req, res) => {
     const item = await findTodoItem(req.params.id);
     if (!item) {
@@ -41,9 +41,9 @@ api.get(
 
 api.post(
   '/api/items',
-  validateBody(z.object({
+  validateBody({
     content: z.string().min(1)
-  })),
+  }),
   async (req, res) => {
     const id = await addTodoItem(req.body);
     return res.json({
@@ -54,12 +54,12 @@ api.post(
 
 api.put(
   '/api/items/:id',
-  validateBody(z.object({
+  validateBody({
     content: z.string().min(1)
-  })),
-  validateParams(z.object({
+  }),
+  validateParams({
     id: z.string().uuid()
-  })),
+  }),
   async (req, res) => {
     const updated = await updateTodoItem(req.params.id, req.body);
     if (!updated) {
@@ -77,9 +77,9 @@ api.put(
 
 api.delete(
   '/api/items/:id',
-  validateParams(z.object({
+  validateParams({
     id: z.string().uuid()
-  })),
+  }),
   async (req, res) => {
     const deleted = await deleteTodoItem(req.params.id);
     if (!deleted) {

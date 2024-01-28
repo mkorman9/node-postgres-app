@@ -1,19 +1,21 @@
 import {Router} from 'express';
 import z from 'zod';
 import {addTodoItem, deleteTodoItem, findTodoItem, findTodoItemsPaged, updateTodoItem} from './model';
-import {validateBody, validateParams, validateQuery} from '../http/validation';
+import {validate} from '../http/validation';
 
 const api = Router();
 
 api.get(
   '/api/items',
-  validateQuery({
-    pageSize: z.coerce.number()
-      .int()
-      .min(1)
-      .max(100)
-      .default(10),
-    pageToken: z.string().optional()
+  validate({
+    query: {
+      pageSize: z.coerce.number()
+        .int()
+        .min(1)
+        .max(100)
+        .default(10),
+      pageToken: z.string().optional()
+    }
   }),
   async (req, res) => {
     const page = await findTodoItemsPaged(req.query.pageSize, req.query.pageToken);
@@ -23,8 +25,10 @@ api.get(
 
 api.get(
   '/api/items/:id',
-  validateParams({
-    id: z.string().uuid()
+  validate({
+    params: {
+      id: z.string().uuid()
+    }
   }),
   async (req, res) => {
     const item = await findTodoItem(req.params.id);
@@ -41,8 +45,10 @@ api.get(
 
 api.post(
   '/api/items',
-  validateBody({
-    content: z.string().min(1)
+  validate({
+    body: {
+      content: z.string().min(1)
+    }
   }),
   async (req, res) => {
     const id = await addTodoItem(req.body);
@@ -54,11 +60,13 @@ api.post(
 
 api.put(
   '/api/items/:id',
-  validateBody({
-    content: z.string().min(1)
-  }),
-  validateParams({
-    id: z.string().uuid()
+  validate({
+    params: {
+      id: z.string().uuid()
+    },
+    body: {
+      content: z.string().min(1)
+    }
   }),
   async (req, res) => {
     const updated = await updateTodoItem(req.params.id, req.body);
@@ -77,8 +85,10 @@ api.put(
 
 api.delete(
   '/api/items/:id',
-  validateParams({
-    id: z.string().uuid()
+  validate({
+    params: {
+      id: z.string().uuid()
+    }
   }),
   async (req, res) => {
     const deleted = await deleteTodoItem(req.params.id);

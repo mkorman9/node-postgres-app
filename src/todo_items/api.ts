@@ -14,7 +14,9 @@ api.get(
         .min(1)
         .max(100)
         .default(10),
-      pageToken: z.string().optional()
+      pageToken: z.string()
+        .uuid()
+        .optional()
     }
   }),
   async (req, res) => {

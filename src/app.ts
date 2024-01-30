@@ -1,9 +1,9 @@
 import {Request, Response} from 'express';
-import {createApp, attachDefaultHandlers} from './http/app_template';
+import {createExpressApp, attachDefaultHandlers} from './http/express_template';
 import todoItemsAPI from './todo_items/api';
 import config from './config';
 
-const app = createApp({
+const app = createExpressApp({
   corsOrigin: config.HTTP_CORS_ORIGIN,
   trustProxies: config.HTTP_TRUST_PROXIES
 });

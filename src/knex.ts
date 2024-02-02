@@ -1,7 +1,7 @@
 import knex from 'knex';
-import config from '../config';
+import config from './config';
 
-const db = knex({
+export default knex({
   client: 'pg',
   connection: {
     connectionString: config.DB_URL,
@@ -14,5 +14,3 @@ const db = knex({
     idleTimeoutMillis: (process.env.NODE_ENV === 'test') ? 500 : undefined
   }
 });
-
-export default db;

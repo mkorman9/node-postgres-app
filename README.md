@@ -10,7 +10,7 @@ cp .env.template .env
 ## Run locally
 
 ```sh
-docker compose up
+docker compose up -d
 npm start
 ```
 

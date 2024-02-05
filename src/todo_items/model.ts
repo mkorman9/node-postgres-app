@@ -12,6 +12,10 @@ export type TodoItemsPage = {
   nextPageToken?: string;
 };
 
+export type TodoItemPayload = {
+  content: string;
+};
+
 export async function findTodoItemsPaged(pageSize: number, pageToken?: string): Promise<TodoItemsPage> {
   const query = knex<TodoItem>('todo_items')
     .select(['id', 'content'])
@@ -37,7 +41,7 @@ export async function findTodoItem(id: string): Promise<TodoItem | undefined> {
     .first();
 }
 
-export async function addTodoItem(payload: {content: string}): Promise<string> {
+export async function addTodoItem(payload: TodoItemPayload) {
   const id = uuidv7();
   await knex<TodoItem>('todo_items')
     .insert({
@@ -47,7 +51,7 @@ export async function addTodoItem(payload: {content: string}): Promise<string> {
   return id;
 }
 
-export async function updateTodoItem(id: string, payload: {content: string}): Promise<boolean> {
+export async function updateTodoItem(id: string, payload: TodoItemPayload) {
   const affectedRows = await knex<TodoItem>('todo_items')
     .where('id', '=', id)
     .update({
@@ -56,14 +60,14 @@ export async function updateTodoItem(id: string, payload: {content: string}): Pr
   return affectedRows > 0;
 }
 
-export async function deleteTodoItem(id: string): Promise<boolean> {
+export async function deleteTodoItem(id: string) {
   const affectedRows = await knex<TodoItem>('todo_items')
     .where('id', '=', id)
     .delete();
   return affectedRows > 0;
 }
 
-export async function deleteAllTodoItems(): Promise<void> {
+export async function deleteAllTodoItems() {
   await knex<TodoItem>('todo_items')
     .delete();
 }

@@ -45,7 +45,7 @@ docker run \
   -it \
   --rm \
   -v ./migrations:/flyway/sql \
-  redgate/flyway \
+  redgate/flyway:10.7 \
   -url="jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}" \
   -user="${DB_USER}" \
   -password="${DB_PASSWORD}" \

@@ -41,6 +41,18 @@ export async function findTodoItem(id: string): Promise<TodoItem | undefined> {
     .first();
 }
 
+export async function countDuplicates(): Promise<number> {
+  const duplicates = knex('todo_items')
+    .count('* as c')
+    .groupBy('content')
+    .havingRaw('count(*) > 1')
+    .as('duplicates');
+  const result = await knex(duplicates)
+    .sum<{sum: string}>('duplicates.c as sum')
+    .first();
+  return Number(result!.sum);
+}
+
 export async function addTodoItem(payload: TodoItemPayload) {
   const id = uuidv7();
   await knex<TodoItem>('todo_items')

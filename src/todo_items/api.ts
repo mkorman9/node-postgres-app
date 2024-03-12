@@ -1,6 +1,6 @@
 import {Router} from 'express';
 import z from 'zod';
-import {addTodoItem, deleteTodoItem, findTodoItem, findTodoItemsPaged, updateTodoItem} from './model';
+import {addTodoItem, countDuplicates, deleteTodoItem, findTodoItem, findTodoItemsPaged, updateTodoItem} from './model';
 import {validate} from '../http/validation';
 
 const api = Router();
@@ -22,6 +22,15 @@ api.get(
   async (req, res) => {
     const page = await findTodoItemsPaged(req.query.pageSize, req.query.pageToken);
     return res.json(page);
+  }
+);
+
+api.get(
+  '/api/items/duplicates',
+  async (req, res) => {
+    res.json({
+      duplicates: await countDuplicates()
+    });
   }
 );
 
